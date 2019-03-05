@@ -3,7 +3,7 @@
 # Install package updates on ubuntu servers
 #
 - name: upgrade packages and reboot (if necessary)
-  hosts: webservers
+  hosts: ubuntu-test
   remote_user: s-ansible
   become: yes
   become_method: sudo
