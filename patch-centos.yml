@@ -1,9 +1,5 @@
 ---
-#
-# Install package updates on Tandon IT Linux servers 
-#
-- name: upgrade packages and reboot (if necessary)
-  hosts: centos-test
+- hosts: centos-test
   remote_user: s-ansible
   become: yes
   become_method: sudo
