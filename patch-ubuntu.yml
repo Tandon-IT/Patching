@@ -1,0 +1,87 @@
+---
+#
+# Install package updates on ubuntu servers
+#
+- name: upgrade packages and reboot (if necessary)
+  hosts: webservers
+  remote_user: s-ansible
+  become: yes
+  become_method: sudo
+  serial: 1 # one host at a time
+  any_errors_fatal: true
+  max_fail_percentage: 0
+  
+  tasks: # tasks are done in order
+
+    # do an "apt-get update", to ensure latest package lists
+    - name: apt-get update
+      apt:
+        update-cache: yes
+      changed_when: 0
+
+    - name: capture packages to be updated in a file
+      shell: apt-get --simulate dist-upgrade > /var/tmp/update."{{ansible_host}}"
+      args:
+        warn: false
+
+    # get a list of packages that have updates
+    - name: get list of pending upgrades
+      command: apt-get --simulate dist-upgrade
+      args:
+        warn: false # don't warn us about apt having its own plugin
+      register: apt_simulate
+      changed_when: 0
+
+    # if a new kernel is incoming, remove old ones to avoid full /boot
+    - name: apt-get autoremove
+      command: apt-get -y autoremove
+      args:
+        warn: false
+      when: '"Inst linux-image-" in apt_simulate.stdout'
+      changed_when: 0
+
+    # do the actual apt-get dist-upgrade
+    - name: apt-get dist-upgrade
+      apt:
+        upgrade: dist # upgrade all packages to latest version
+        autoclean: yes
+      register: result
+
+    - name: List installed and updated packages
+      shell: grep -E "^$(date +%Y-%m-%d).+ (install|upgrade) " /var/log/dpkg.log |cut -d " " -f 3-5 > /var/tmp/updated.$(date +%m%d%y)."{{ansible_host}}"
+
+    # check if we need a reboot
+    - name: check if reboot needed
+      stat: path=/var/run/reboot-required
+      register: file_reboot_required
+
+    # "meta: end_play" aborts the rest of the tasks in the current «tasks:»
+    # section, for the current webserver
+    # "when:" clause ensures that the "meta: end_play" only triggers if the
+    # current webserver does _not_ need a reboot
+    - meta: end_play
+      when: not file_reboot_required.stat.exists
+
+    # because of the above meta/when we at this point know that the current
+    # host needs a reboot
+
+
+    - name: reboot node
+      shell: sleep 2 && shutdown -r now "Reboot triggered by ansible"
+      async: 1
+      poll: 0
+      ignore_errors: true
+
+    # poll ssh port until we get a tcp connect
+    - name: wait for node to finish booting
+      become: false
+      local_action: wait_for host={{ ansible_ssh_host }}
+          port=22
+          state=started
+          delay=5
+          timeout=600
+
+    # give sshd time to start fully
+    - name: wait for ssh to start fully
+      pause:
+        seconds: 15

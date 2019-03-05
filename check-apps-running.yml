@@ -1,0 +1,16 @@
+---
+- hosts: webservers
+  remote_user: s-ansible
+  become: yes
+  become_method: sudo
+  
+  tasks: # tasks are done in order
+  - name: verify application/databases are running or not
+    shell: if ps -eaf | egrep 'httpd|nginx|jira|postgres|mysql' | grep -v grep > /dev/null; then echo 'processes_running' ; else echo 'processes_not_running'; fi
+    ignore_errors: true
+    register: appr_process_check
+  - debug: msg="{{ appr_process_check.stdout }}" 
+
+  - name: Decision point to start patching 
+    fail: msg="{{ inventory_hostname }} have running applications. Please stop the application first, then attempt patching."
+    when: appr_process_check.stdout == "processes_running"

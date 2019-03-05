@@ -1,0 +1,75 @@
+---
+- name: ensure services are up before doing anything
+  hosts: blackbox.poly.edu
+  tasks:
+    - name: verify that blackbox.poly.edu is up
+      uri:
+        url: http://blackbox.poly.edu
+        status_code: 200
+        follow_redirects: none
+      vars:
+        http_headers:
+          Host: blackbox.poly.edu
+
+    - name: verify that bugzilla.poly.edu is up
+      uri:
+        url: https://bugzillla.poly.edu
+        status_code: 200
+        follow_redirects: none
+      vars:
+        http_headers:
+          Host: bugzilla.poly.edu
+
+    - name: verify that checkapi.poly.edu is up
+      uri:
+        url: https://checkapi.poly.edu/projects/project
+        status_code: 200
+        follow_redirects: none
+      vars:
+        http_headers:
+          Host: checkapi.poly.edu
+
+    - name: verify that chimera.poly.edu is up
+      uri:
+        url: https://chimera.poly.edu/projects/project
+        status_code: 200
+        follow_redirects: none
+      vars:
+        http_headers:
+          Host: chimera.poly.edu
+
+    - name: verify that code.engineering.nyu.edu is up
+      uri:
+        url: https://code.engineering.nyu.edu
+        status_code: 200
+        follow_redirects: none
+      vars:
+        http_headers:
+          Host: code.engineering.nyu.edu
+
+    - name: verify that control-sonyc.engineering.nyu.edu is up
+      uri:
+        url: http://control-sonyc.engineering.nyu.edu
+        status_code: 200
+        follow_redirects: none
+      vars:
+        http_headers:
+          Host: control-sonyc.engineering.nyu.edu
+
+    - name: verify that cse-new.poly.edu is up
+      uri:
+        url: https://engineering.nyu.edu/academics/departments/computer-science-and-engineering
+        status_code: 200
+        follow_redirects: none
+      vars:
+        http_headers:
+          Host: cse-new.poly.edu
+
+    - name: verify that ece-wiki.poly.edu is up
+      uri:
+        url: https://ece-wiki.poly.edu
+        status_code: 200
+        follow_redirects: none
+      vars:
+        http_headers:
+          Host: ece-wiki.poly.edu
